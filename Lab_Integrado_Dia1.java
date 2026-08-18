@@ -1,9 +1,12 @@
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import.java.util.HashSet;
 
 public class Aluno {
   private String nome, mat;
   private int id;
+  private Set <String> disciplinas = new HashSet<>();
 
   public Aluno(String n, String m) {
     this.nome = n;
@@ -22,6 +25,10 @@ public class Aluno {
     return this.id;
   }
 
+  public Set <String> getDisc() {
+    return this.disciplinas;
+  }
+
   public void setNome(String nm) {
     this.nome = nm;
   }
@@ -32,6 +39,10 @@ public class Aluno {
 
   public void setId(int novoID) {
     this.id = novoID;
+  }
+
+  public void cadDisciplina(String discip) {
+    
   }
 }
 
