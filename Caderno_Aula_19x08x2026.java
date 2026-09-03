@@ -38,3 +38,33 @@ public class Thread_Basic_2 {
         );
     }
 }
+
+// === === === === === === === === === === === === === === === === === === //
+
+// -> Classe para criação de thread que usará Runnable
+
+// Classe para criação de thread que usará Runnable
+public class Thread_Runnable_Basic {
+    public static void main(String[] args) {
+        // Cria variável MeuRunnable para as threads saberem o que executar 
+        MeuRunnable r = new MeuRunnable();
+        
+        // Thread criada que tem como parâmetros o que executará e seu nome
+        Thread tCRun = new Thread(r, "Thread_Disc");
+        // Inicia a thread
+        tCRun.start();
+    }
+}
+
+// -> Classe que determinará o que será executado na thread
+
+// Classe que determinará o que será executado na thread
+public class MeuRunnable implements Runnable {
+    @Override
+    public void run() { // Método de execução do que será feito
+        // Pega nome da thread que está usando o método
+        String name = Thread.currentThread().getName();
+        // Imprime nome da thread e texto correspondente
+        System.out.println(name + ": " + "Linguagem de Programação 3");
+    }
+}
