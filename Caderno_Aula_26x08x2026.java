@@ -152,3 +152,77 @@ public class Bilheteria implements Runnable {
     }
 }
 
+// === === === === === === === === === === === === === === === === === === //
+
+// -> Classes para venda de ingressos por Caixa com Atomicidade (Classe Caixas)
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class Atomicidade {
+    private AtomicInteger ingressos = new AtomicInteger(100);
+    private int qt = 5;
+    private int cota = ingressos.get() / qt;
+    
+    public Atomicidade() {}
+    
+    public Atomicidade(AtomicInteger i, int q, int c) {
+        this.ingressos = i;
+        this.qt = q;
+        this.cota = c;
+    }
+    
+    public AtomicInteger getIng() { return this.ingressos; }
+    
+    public int getQt() { return this.qt; }
+    
+    public int getCota() { return this.cota; }
+    
+    public static void main(String[] args) {
+        Atomicidade at = new Atomicidade();
+        MeuRunnable rn = new MeuRunnable(at, at.getCota());
+        Thread[] t = new Thread[at.getQt()];
+        
+        for(int i = 0; i < at.getQt(); i++) {
+            t[i] = new Thread(rn);
+            t[i].start();
+        }
+    }
+}
+
+// -> Classes para venda de ingressos por Caixa com Atomicidade (Classe MeuRunnable)
+
+public class MeuRunnable implements Runnable {
+    private Atomicidade atomic;
+    private int cota;
+    
+    public MeuRunnable(Atomicidade a, int c) {
+        this.atomic = a;
+        this.cota = c;
+    }
+    
+    @Override
+    public void run() {
+        for(int i = 0; i < cota; i++) {
+            int atual;
+        
+            // Tenta decrementar de forma atômica e segura
+            do {
+                atual = atomic.getIng().get();
+                
+                if (atual <= 0) {
+                    System.out.println("==================================================");
+                    System.out.println("Não há ingressos disponíveis!");
+                    System.out.println("==================================================");
+                    return; // Encerra a thread se acabaram os ingressos
+                }
+                
+            // O compareAndSet garante que se o valor mudou por outra thread, ele tenta de novo
+            } while(!atomic.getIng().compareAndSet(atual, atual - 1));
+        
+            String nome = Thread.currentThread().getName();
+            int ingRestantes = atual - 1; // O valor após a nossa venda bem-sucedida
+        
+            System.out.println("O caixa " + nome + " vendeu 1 ingresso! Falta(m) " + ingRestantes + " ingressos!");
+        }
+    }
+}
