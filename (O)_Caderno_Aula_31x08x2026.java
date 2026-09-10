@@ -1,4 +1,9 @@
+// === === === === === === === === === === === === === === === === === === //
+
+// -> Atendimento de alunos com coleções para concorrência (Classe Turma)
+
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Turma {
     private static List<Aluno> turma = new CopyOnWriteArrayList<>();
@@ -15,7 +20,7 @@ public class Turma {
     
     public static void main(String[] args) {
         Aluno[] a = new Aluno[qtAlunos];
-        for(int i = 0; i < this.qtAlunos; i++) {
+        for(int i = 0; i < qtAlunos; i++) {
             String nome = "Aluno " + (i+1);
             String curso = "Matemática";
             int matricula = 2026000 + (i+2*i*2);
@@ -28,14 +33,14 @@ public class Turma {
         MeuRunnable rn = new MeuRunnable(turma);
         Thread[] t = new Thread[qtThreads];
         
-        for(int i = 0; i < this.qtThreads; i++) {
+        for(int i = 0; i < qtThreads; i++) {
             t[i] = new Thread(rn, "Atendente " + (i+1));
             t[i].start();
         }
     }
 }
 
-
+// -> Atendimento de alunos com coleções para concorrência (Classe Aluno)
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,7 +53,7 @@ public class Aluno {
         this.nome = n;
         this.curso = c;
         this.matricula = m;
-        this.qtDisciplinas = = new AtomicInteger(0);
+        this.qtDisciplinas = new AtomicInteger(0);
     }
     
     public String getNome() { return this.nome; }
@@ -60,14 +65,15 @@ public class Aluno {
     
 }
 
-
-
+// -> Atendimento de alunos com coleções para concorrência (Classe MeuRunnable)
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
 
 public class MeuRunnable implements Runnable {
     private final List<Aluno> turma;
     private static final AtomicInteger proxAluno = new AtomicInteger(0);
+    private static final Object divid = new Object();
 
     public MeuRunnable(List<Aluno> l) {
         this.turma = l;
@@ -86,30 +92,17 @@ public class MeuRunnable implements Runnable {
         
         while(true) {
             int indAtendimento = proxAluno.getAndIncrement();
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        while(alunosAtender >= 0 && atendeu == 0) {
-            int alunosAtender = turma.getQtAlunos();
-            int atendeu = 0;
             
-            
-            
-            for(int i = 0; i < alunosAtender; i++) {
-                System.out.println("=========================");
-                System.out.println("O " + nome + "atendeu o " + turma[i].getNome())
-                + ", adicionado 1 disciplina!"
+            if(indAtendimento >= turma.size()) {
+                break;
             }
+            
+            Aluno aluno = turma.get(indAtendimento);
+            aluno.acrescentarDisc();
+            
+            System.out.println("O " + nome + " atendeu o aluno " + aluno.getNome()
+            + " e acrescentou 1 disciplina!" + " Total = " + aluno.getQtDisciplinas()
+            + " disciplinas!");
         }
     }
-    
-    
 }
-
