@@ -62,7 +62,6 @@ public class Aluno {
     public int getQtDisciplinas() { return this.qtDisciplinas.get(); }
     
     public int acrescentarDisc() { return this.qtDisciplinas.incrementAndGet(); }
-    
 }
 
 // -> Atendimento de alunos com coleções para concorrência (Classe MeuRunnable)
