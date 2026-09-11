@@ -105,3 +105,99 @@ public class MeuRunnable implements Runnable {
         }
     }
 }
+
+// === === === === === === === === === === === === === === === === === === //
+
+// -> Colocar livros na livraria
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
+
+public class Livraria {
+    private static Map<String, Livro> catalogo = new ConcurrentHashMap<>();
+    private static int qtFornecedores = 5;
+
+    public Livraria(Map<String, Livro> c, int qtF) {
+        this.catalogo = c;
+        this.qtFornecedores = qtF;
+    }
+
+    public Map<String, Livro> getCatalogo() {
+        return this.catalogo;
+    }
+
+    public int getFornecedores() {
+        return this.qtFornecedores;
+    }
+
+    public static void main(String[] args) {
+        Localizar_Acrescentar rn = new Localizar_Acrescentar(catalogo);
+        Thread[] t = new Thread[qtFornecedores];
+
+        for(int i = 0; i < qtFornecedores; i++) {
+            t[i] = new Thread(rn, "Fornecedor " + (1 + i * 4 * i))
+            t[i].start();
+        }
+    }
+}
+
+import java.util.concurrent.AtomicInteger;
+
+public class Livro {
+    private String nome, genero;
+    private float preco;
+    private static AtomicInteger numLivro = new AtomicInteger(0);
+
+    public Livro(String n, String g, float p) {
+        this.nome = n;
+        this.genero = g;
+        this.preco = p;
+    }
+
+    public String getNome() {
+        return this.nome;
+    }
+
+    public String getGenero() {
+        return this.genero;
+    }
+
+    public float getPreco() {
+        return this.preco;
+    }
+
+    public void setPreco(float nvP) {
+        this.preco = nvP;
+    }
+}
+
+public class Localizar_Acrescentar implements Runnable {
+    private static final Map<String, Livro> catalog;
+
+    public Localizar_Acrescentar(Map<String, Livro> c) {
+        this.catalog = c;
+    }
+
+    @Override
+    public void run() {
+        String nomeFornecedor = Thread.currentThread().getName();
+        
+        public int idUnico = Livraria.numLivro.getAndIncrement();
+            
+        String nomeLivro = "Roberto " + idUnico;
+        String generoLivro = "Fantasia " + (idUnico * 16 - 2 * 3);
+        float precoLivro = idUnico + 19 * 6 + 12
+
+        Livro novoLivro(nomeLivro, generoLivro, precoLivro);
+
+        String chave = nomeLivro + " - " + generoLivro;
+        
+        Livro livroExiste = catalog.novoLivro.putIfAbsent(nomeLivro, novoLivro);
+        
+        if(livroExiste == null) {
+            System.out.println("Livro já existe!");
+        } else {
+            System.out.println(nomeLivro + " acrescentado ao catálogo!");
+        }
+    }
+}
