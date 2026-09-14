@@ -18,7 +18,9 @@ public class ControleAcesso {
 }
 
 
-import java.util.concurrent.AtomicInteger;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -36,10 +38,32 @@ public class Estadio {
     }
     
     public boolean liberarEntrada(String catraca) {
-        if(this.publicoAtual >= this.capacidade) {
-            return false;
-        }
+        int atual;
+        do {
+            atual = publicoAtual.get();
+            if(atual >= capacidade) {
+                return false;
+            }
+        } while(!publicoAtual.compareAndSet(atual, atual + 1));
+        
+        int numero = atual + 1;
+        entradasPorCatraca.merge(catraca, 1, Integer::sum);
+        log.add(numero + ";" + catraca);
+        System.out.printf("%s liberou a entrada no %d | Vagas restantes: %d%n",
+        catraca, numero, capacidade - numero);
         return true;
+    }
+    
+    public void relatorio() {
+        System.out.println("\n --- Relatório ---");
+        System.out.println("Público total: " + publicoAtual.get());
+        System.out.println("Registros no log: " + log.size());
+        entradasPorCatraca.forEach((k, v) -> System.out.println(k + "; " + v));
+        
+        synchronized(log) {
+            System.out.println("Primeiro registro: " + log.get(0));
+            System.out.println("Último registro: " + log.get(log.size() - 1));
+        }
     }
 }
 
