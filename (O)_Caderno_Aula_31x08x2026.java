@@ -102,4 +102,67 @@ public class MeuRunnable implements Runnable {
 
 // === === === === === === === === === === === === === === === === === === //
 
+// Registro de alunos em uma turma (por nome e nota) //
+
+public class Main {
+    public static void main(String[] args) {
+        Turma turma = new Turma();
+        MeuRunnable rn = new MeuRunnable(turma);
+        int qtThreads = 5;
+        
+        Thread[] t = new Thread[qtThreads];
+        
+        for(int i = 0; i < qtThreads; i++) {
+            t[i] = new Thread(rn, "Cadastrador" + i);
+            t[i].start();
+            try {
+                Thread.sleep(1000);
+            } catch(InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+}
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class Turma {
+    private Map <String, Double> turma;
+    
+    public Turma() {
+        this.turma = new ConcurrentHashMap<>();
+    }
+    
+    public void addAluno(String nome, Double nota) {
+        this.turma.put(nome, nota);
+        System.out.println("Aluno " + nome + " adicionado com sucesso!");
+        System.out.println("Nota: " + nota);
+    }
+}
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class MeuRunnable implements Runnable {
+    private Turma turma;
+    public AtomicInteger n = new AtomicInteger(0);
+    
+    
+    public MeuRunnable(Turma t) {
+        this.turma = t;
+    }
+    
+    
+    @Override
+    public void run() {
+        int numAtual = n.getAndIncrement();
+        turma.addAluno("Bruno" + numAtual, 2.6 * numAtual);
+    }
+}
+
+// === === === === === === === === === === === === === === === === === === //
+
+
+
+
 
