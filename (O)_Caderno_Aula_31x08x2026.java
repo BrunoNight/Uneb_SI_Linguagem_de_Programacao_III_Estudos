@@ -161,8 +161,89 @@ public class MeuRunnable implements Runnable {
 }
 
 // === === === === === === === === === === === === === === === === === === //
+INCOMPLETO
+// Registro de pacientes em uma fila //
 
+public class Upa {
+    public static void main(String[] args) {
+        Fila fila = new Fila();
+        Servico rn = new Servico(fila);
+        int qtThreads = 15;
+        
+        Thread[] t = new Thread[qtThreads];
+        
+        for(int i = 0; i < qtThreads; i++) {
+            t[i] = new Thread(rn, "Cadastrador" + i);
+            t[i].start();
+            try {
+                Thread.sleep(1000);
+            } catch(InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+        System.out.println("Fila final: " + fila.getFila());
+    }
+}
 
+public class Paciente {
+    private String nome;
+    private int idade;
+    
+    public Paciente(String n, int i) {
+        this.nome = n;
+        this.idade = i;
+    }
+    
+    public String getNome() {
+        return this.nome;
+    }
+    
+    public int getIdade() {
+        return this.idade;
+    }
+}
 
+import java.util.concurrent.atomic.AtomicInteger;
 
+public class Servico implements Runnable {
+    private Fila fila;
+    public AtomicInteger n = new AtomicInteger(0);
+    
+    public Servico(Fila f) {
+        this.fila = f;
+    }
+    
+    @Override
+    public void run() {
+        int numAtual = n.getAndIncrement();
+        fila.addPac("AnaP0" + numAtual, 6 * numAtual);
+    }
+}
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+public class Fila {
+    private BlockingQueue <Paciente> filaPac;
+    
+    public Fila() {
+        this.filaPac = new LinkedBlockingQueue<>();
+    }
+    
+    public BlockingQueue <Paciente> getFila() {
+        return this.filaPac;
+    }
+    
+    public void addPac(String nome, int idade) {
+        try {
+            Paciente nvPac = new Paciente(nome, idade);
+            filaPac.put(nvPac);
+            System.out.println("Paciente " + nome + " adicionado à fila!"
+            + " Idade de " + idade + " anos!");
+        } catch(InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}
 
