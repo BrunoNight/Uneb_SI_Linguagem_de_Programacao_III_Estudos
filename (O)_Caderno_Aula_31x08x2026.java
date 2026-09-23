@@ -161,7 +161,7 @@ public class MeuRunnable implements Runnable {
 }
 
 // === === === === === === === === === === === === === === === === === === //
-INCOMPLETO
+
 // Registro de pacientes em uma fila //
 
 public class Upa {
@@ -182,7 +182,8 @@ public class Upa {
             }
         }
         
-        System.out.println("Fila final: " + fila.getFila());
+        System.out.print("\nFila final: \n");
+        fila.impPacientesFila();
     }
 }
 
@@ -243,6 +244,12 @@ public class Fila {
             + " Idade de " + idade + " anos!");
         } catch(InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+    }
+    
+    public void impPacientesFila() {
+        for(Paciente p: filaPac) {
+            System.out.println(p.getNome() + " - " + p.getIdade() + ";");
         }
     }
 }
