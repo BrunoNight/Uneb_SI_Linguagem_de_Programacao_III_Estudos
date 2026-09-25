@@ -254,3 +254,137 @@ public class Fila {
     }
 }
 
+// === === === === === === === === === === === === === === === === === === //
+
+// Atendimento em Supermercado
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class Supermercado {
+    private static int qtAtendentes = 5;
+    private static final AtomicInteger qtClientes = new AtomicInteger(20);
+    private static final AtomicBoolean estaVazio = new AtomicBoolean(false);
+    
+    public static int getQtClientes() {
+        return qtClientes.get();
+    }
+    
+    public static boolean getEstaVazio() {
+        return estaVazio.get();
+    }
+    
+    public static void setEstaVazio(boolean estado) {
+        estaVazio.set(estado);
+    }
+    
+    public static int decrementarClientes() {
+        int atual;
+        
+        do {
+            atual = getQtClientes();
+            
+            if(atual <= 0) {
+                return -1;
+            }
+            
+        } while(!qtClientes.compareAndSet(atual, atual - 1));
+        
+        return atual - 1;
+    }
+    
+    public static void main(String[] args) {
+        Caixa c = new Caixa(0f, 0);
+        Thread[] t = new Thread[qtAtendentes];
+        
+        for(int i = 0; i < qtAtendentes; i++) {
+            Atendimento at = new Atendimento(c);
+                
+            t[i] = new Thread(at, "Atendente-" + (i+1));
+            t[i].start();
+        }
+        
+        for(int i = 0; i < qtAtendentes; i++) {
+            try {
+                t[i].join();
+            } catch(InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+}
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+public class Caixa {
+    private final AtomicReference<Float> saldo;
+    private final AtomicInteger qtClientesAtendidos;
+    
+    public Caixa(float s, int q) {
+        this.saldo = new AtomicReference<>(s);
+        this.qtClientesAtendidos = new AtomicInteger(q);
+    }
+    
+    public float getSaldo() {
+        return this.saldo.get();
+    }
+    
+    public int getQtClientesAtendidos() {
+        return this.qtClientesAtendidos.get();
+    }
+    
+    public void atenderCliente(String nome, float valorPago) {
+        System.out.println(nome + " atendeu um cliente que pagou R$" + valorPago + "!");
+        
+        this.qtClientesAtendidos.incrementAndGet();
+        
+        float atual;
+        do {
+            atual = this.saldo.get();
+        } while(!this.saldo.compareAndSet(atual, atual + valorPago));
+        
+        System.out.println("\nSaldo do caixa = R$" + getSaldo());
+        System.out.println("Quantidade de clientes atendidos = " + getQtClientesAtendidos());
+    }
+}
+
+public class Atendimento implements Runnable {
+    public Caixa c;
+    
+    public Atendimento(Caixa cx) {
+        this.c = cx;
+    }
+    
+    @Override
+    public void run() {
+        while(true) {
+            int restantes = Supermercado.decrementarClientes();
+            
+            if(restantes < 0) {
+                System.out.println("Supermercado vazio!");
+                break;
+            }
+            
+            String nome = Thread.currentThread().getName();
+            float valorPago = 9.85f;
+        
+            c.atenderCliente(nome, valorPago);
+            
+            System.out.println("Clientes restantes = " + Supermercado.getQtClientes());
+        
+            if(Supermercado.getQtClientes() <= 0) {
+                Supermercado.setEstaVazio(true);
+            }
+        
+            System.out.println("Supermercado vazio? " + Supermercado.getEstaVazio());
+        
+            try {
+                Thread.sleep(100);
+            } catch(InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+    }
+}
