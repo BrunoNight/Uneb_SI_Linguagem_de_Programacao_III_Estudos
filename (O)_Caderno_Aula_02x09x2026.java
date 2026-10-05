@@ -87,3 +87,102 @@ public class MeuCallable implements Callable<String> {
         return nome + " vendeu " + qtVendida + " tickets! Faltam: " + estad.getQtTickets();
     }
 }
+
+// === === === === === === === === === === === === === === === === === === //
+
+// Análise de retirada de dinheiro
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class Conta {
+    private final AtomicInteger saldo;
+    private final String dono;
+    
+    public Conta(int s, String d) {
+        this.saldo = new AtomicInteger(s);
+        this.dono = d;
+    }
+    
+    public int getSaldo() {
+        return this.saldo.get();
+    }
+    
+    public String getDono() {
+        return this.dono;
+    }
+    
+    public int decrementar(int valor) {
+        int atual;
+        
+        do {
+            atual = getSaldo();
+            
+            if(atual <= 0) {
+                System.out.println("Saldo insuficiente!");
+                return -1;
+            } else if(atual < valor) {
+                System.out.println("Saldo menor que o valor solicitado para sacar!");
+                return -1;
+            }
+        } while(!this.saldo.compareAndSet(atual, atual - valor));
+        
+        return atual - valor;
+    }
+    
+    public static void main(String args[]) {
+        Conta c = new Conta(10000, "Bruno");
+        BCallable call = new BCallable(c);
+        ExecutorService e = Executors.newFixedThreadPool(2);
+        
+        try {
+            for(int i = 0; i < 10; i++) {
+                Future<String> promessa = e.submit(call);
+                
+                System.out.println("A tarefa terminou? " + promessa.isDone());
+            
+                String resultado = promessa.get(1, TimeUnit.SECONDS);
+                System.out.println("Resultado: " + resultado);
+            
+                System.out.println("Tarefa terminou após o get? " + promessa.isDone());
+            }
+        } catch(TimeoutException t) {
+            System.out.println("Erro: " + t);
+        } catch(Exception ex) {
+            System.out.println("Erro: " + ex);
+        } finally {
+            if(e != null) {
+                e.shutdown();
+            }
+        }
+    }
+}
+
+import java.util.concurrent.Callable;
+import java.util.Random;
+
+public class BCallable implements Callable<String> {
+    private final Conta conta;
+    
+    public BCallable(Conta c) {
+        this.conta = c;
+    }
+    
+    @Override
+    public String call() throws Exception {
+        String nome = Thread.currentThread().getName();
+        int valorRetirada = new Random().nextInt(40);
+        
+        conta.decrementar(valorRetirada);
+        
+        Thread.sleep(500);
+        
+        return nome + " retirou da conta de " + conta.getDono() + " " + valorRetirada + " reais! "
+        + "Faltam " + conta.getSaldo() + " reais!";
+    }
+}
