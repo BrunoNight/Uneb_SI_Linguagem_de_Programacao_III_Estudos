@@ -186,3 +186,124 @@ public class BCallable implements Callable<String> {
         + "Faltam " + conta.getSaldo() + " reais!";
     }
 }
+
+// === === === === === === === === === === === === === === === === === === //
+
+// Entrada de pessoas em um Estádio
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class Estadio {
+    private final AtomicInteger pessoas;
+    private final int qtCaixas, limite;
+
+    public Estadio(int p, int q, int l) {
+        this.pessoas = new AtomicInteger(p);
+        this.qtCaixas = q;
+        this.limite = l;
+    }
+
+    public int getPessoas() {
+        return this.pessoas.get();
+    }
+
+    public int getCaixas() {
+        return this.qtCaixas;
+    }
+
+    public int getLimite() {
+        return this.limite;
+    }
+
+    public int incrementar(int qt) {
+        int atual;
+
+        do {
+            atual = getPessoas();
+
+            if(atual >= getLimite()) {
+                System.out.println("Estádio cheio!");
+                return -1;
+            } else if(atual + qt > getLimite()) {
+                System.out.println("Vagas insuficientes!");
+                return -1;
+            }
+        } while(!this.pessoas.compareAndSet(atual, atual + qt));
+
+        return atual + qt;
+    }
+
+    public static void main(String[] args) {
+        Estadio e = new Estadio(0, 10, 7000); // Inicializando o Estadio
+        Bilheteria b = new Bilheteria(e); // Inicializando o serviço (Callable)
+        ExecutorService ex = Executors.newFixedThreadPool(e.getCaixas()); // Inicializando executor com os caixas
+        ExecutorCompletionService<String> execLoop = new ExecutorCompletionService<>(ex);
+
+        try {
+            int tarefasAtivas = 0;
+
+            for(int i = 0; i < e.getCaixas(); i++) {
+                if(e.getPessoas() < e.getLimite()) {
+                    execLoop.submit(b);
+                    tarefasAtivas++;
+                }
+            }
+
+            while(tarefasAtivas > 0) {
+                Future<String> futuroCompleto = execLoop.take();
+
+                tarefasAtivas--;
+
+                try {
+                    String resultado = futuroCompleto.get();
+                    System.out.println(resultado);
+                } catch(InterruptedException | ExecutionException exceptionR) {
+                    System.out.println("Erro durante vendas: " + exceptionR.getMessage());
+                }
+
+                if(e.getPessoas() < e.getLimite()) {
+                    execLoop.submit(b);
+                    tarefasAtivas++;
+                }
+            }
+        } catch(InterruptedException i) {
+            System.out.println("Erro" + i);
+        } catch(Exception excep) {
+            System.out.println("Erro: " + excep);
+        } finally {
+            if(ex != null) {
+                ex.shutdown();
+            }
+        }
+    }
+}
+
+import java.util.Random;
+import java.util.concurrent.Callable;
+
+public class Bilheteria implements Callable<String> {
+    private final Estadio est;
+
+    public Bilheteria(Estadio e) {
+        this.est = e;
+    }
+
+    @Override
+    public String call() throws Exception {
+        String nome = Thread.currentThread().getName();
+        int qtPessoasEntraram = new Random().nextInt(40);
+
+        est.incrementar(qtPessoasEntraram);
+
+        Thread.sleep(500);
+
+        return "Entraram " + qtPessoasEntraram + " pessoas! Tem atualmente "
+        + est.getPessoas() + " pessoas! E faltam " + (est.getLimite() - est.getPessoas())
+        + " pessoas!";
+    }
+}
